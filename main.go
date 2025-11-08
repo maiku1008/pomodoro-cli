@@ -24,9 +24,7 @@ func main() {
 	// set a configurable timer for pomodoro
 	timer := flag.Int("timer", 25, "The timer duration in minutes")
 	breakTimer := flag.Int("break", 5, "The break duration in minutes")
-	intervalTimer := flag.Int("interval", 4, "The interval duration in minutes")
-	// TODO: implement intervals
-	_ = intervalTimer
+	intervals := flag.Int("interval", 4, "The number of pomodoros to complete before a longer break")
 	flag.Parse()
 
 	// create string template to add to the hosts file
@@ -62,60 +60,73 @@ func main() {
 		cancel()
 	}()
 
-	// Phase 1: Work time - block sites
-	fmt.Printf("🍅 Starting Pomodoro work session (%d minutes)\n", *timer)
-	fmt.Println("Blocking distracting sites...")
-	err = blockSites(blockTemplate, hostsFile)
-	if err != nil {
-		log.Fatal(err)
+	// Run multiple pomodoro cycles
+	fmt.Printf("🍅 Starting %d Pomodoro cycle(s)\n\n", *intervals)
+
+	for i := 1; i <= *intervals; i++ {
+		fmt.Printf("═══════════════════════════════════════\n")
+		fmt.Printf("🍅 Pomodoro %d of %d\n", i, *intervals)
+		fmt.Printf("═══════════════════════════════════════\n\n")
+
+		// Phase 1: Work time - block sites
+		fmt.Printf("⏰ Work session (%d minutes)\n", *timer)
+		fmt.Println("Blocking distracting sites...")
+		err = blockSites(blockTemplate, hostsFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Play windup sound and start ticking
+		playSound("sounds/windup.wav")
+		workCtx, workCancel := context.WithCancel(ctx)
+		startTickingSound(workCtx)
+
+		// Wait for either the work timer to finish or cancellation
+		select {
+		case <-time.After(time.Duration(*timer) * time.Minute):
+			workCancel() // Stop ticking
+			playSound("ding.wav")
+			fmt.Println("\n✅ Work session complete!")
+		case <-ctx.Done():
+			workCancel() // Stop ticking
+			fmt.Println("\n❌ Pomodoro cancelled")
+			return // defer will unblock sites
+		}
+
+		// Phase 2: Break time - unblock sites
+		fmt.Println("Unblocking sites for break...")
+		err = unblockSites(blockTemplate, hostsFile)
+		if err != nil {
+			log.Printf("Error unblocking sites: %v\n", err)
+			return
+		}
+
+		fmt.Printf("\n☕ Break time! (%d minutes)\n", *breakTimer)
+		fmt.Println("Sites are now unblocked. Take a break!")
+
+		// Play windup sound and start ticking for break
+		playSound("sounds/windup.wav")
+		breakCtx, breakCancel := context.WithCancel(ctx)
+		startTickingSound(breakCtx)
+
+		// Wait for either the break timer to finish or cancellation
+		select {
+		case <-time.After(time.Duration(*breakTimer) * time.Minute):
+			breakCancel() // Stop ticking
+			playSound("sounds/ding.wav")
+			fmt.Println("\n⏰ Break finished!")
+		case <-ctx.Done():
+			breakCancel() // Stop ticking
+			fmt.Println("\n❌ Break cancelled")
+			return
+		}
+
+		fmt.Printf("\n✨ Pomodoro %d complete!\n\n", i)
 	}
 
-	// Play windup sound and start ticking
-	playSound("windup.wav")
-	workCtx, workCancel := context.WithCancel(ctx)
-	startTickingSound(workCtx)
-
-	// Wait for either the work timer to finish or cancellation
-	select {
-	case <-time.After(time.Duration(*timer) * time.Minute):
-		workCancel() // Stop ticking
-		playSound("ding.wav")
-		fmt.Println("\n✅ Work session complete!")
-	case <-ctx.Done():
-		workCancel() // Stop ticking
-		fmt.Println("\n❌ Work session cancelled")
-		return // defer will unblock sites
-	}
-
-	// Phase 2: Break time - unblock sites
-	fmt.Println("Unblocking sites for break...")
-	err = unblockSites(blockTemplate, hostsFile)
-	if err != nil {
-		log.Printf("Error unblocking sites: %v\n", err)
-		return
-	}
-
-	fmt.Printf("\n☕ Break time! (%d minutes)\n", *breakTimer)
-	fmt.Println("Sites are now unblocked. Take a break!")
-
-	// Play windup sound and start ticking for break
-	playSound("windup.wav")
-	breakCtx, breakCancel := context.WithCancel(ctx)
-	startTickingSound(breakCtx)
-
-	// Wait for either the break timer to finish or cancellation
-	select {
-	case <-time.After(time.Duration(*breakTimer) * time.Minute):
-		breakCancel() // Stop ticking
-		playSound("ding.wav")
-		fmt.Println("\n⏰ Break finished!")
-	case <-ctx.Done():
-		breakCancel() // Stop ticking
-		fmt.Println("\n❌ Break cancelled")
-		return
-	}
-
-	fmt.Println("Pomodoro session complete! 🎉")
+	fmt.Println("═══════════════════════════════════════")
+	fmt.Printf("🎉 All %d Pomodoro cycles complete!\n", *intervals)
+	fmt.Println("═══════════════════════════════════════")
 }
 
 // playSound plays a sound file once using afplay (macOS)
@@ -135,7 +146,7 @@ func startTickingSound(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			default:
-				cmd := exec.CommandContext(ctx, "afplay", "ticking.wav")
+				cmd := exec.CommandContext(ctx, "afplay", "sounds/ticking.wav")
 				_ = cmd.Run() // Will be interrupted when context is cancelled
 			}
 		}
