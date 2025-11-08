@@ -34,7 +34,6 @@ func Block(blockTemplate string, hostsFile *os.File) error {
 
 	// check if the block template is in the hosts file
 	if strings.Contains(string(hosts), blockTemplate) {
-		fmt.Println("Block template already exists in hosts file")
 		return nil
 	}
 
@@ -44,7 +43,6 @@ func Block(blockTemplate string, hostsFile *os.File) error {
 		return err
 	}
 
-	fmt.Println("Block template added to hosts file")
 	return nil
 }
 
@@ -82,10 +80,6 @@ func Unblock(blockTemplate string, hostsFile *os.File) error {
 		if err != nil {
 			return err
 		}
-
-		fmt.Println("Block template removed from hosts file")
-	} else {
-		fmt.Println("Block template not found in hosts file")
 	}
 
 	return nil

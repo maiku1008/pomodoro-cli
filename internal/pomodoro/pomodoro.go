@@ -85,18 +85,11 @@ func Run(ctx context.Context, cfg Config) error {
 		fmt.Printf("\n☕ Break time! (%.0f minutes)\n", cfg.BreakDuration.Minutes())
 		fmt.Println("Sites are now unblocked. Take a break!")
 
-		// Play windup sound and start ticking for break
-		breakCtx, breakCancel := context.WithCancel(ctx)
-		sound.StartTicking(breakCtx, cfg.TickingSound)
-
 		// Wait for either the break timer to finish or cancellation
 		select {
 		case <-time.After(cfg.BreakDuration):
-			breakCancel() // Stop ticking
-			sound.Play(cfg.DingSound)
 			fmt.Println("\n⏰ Break finished!")
 		case <-ctx.Done():
-			breakCancel() // Stop ticking
 			fmt.Println("\n❌ Break cancelled")
 			return nil
 		}
