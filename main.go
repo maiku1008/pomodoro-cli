@@ -4,54 +4,27 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
-	"os/exec"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
+
+	"github.com/maiku1008/pomodoro-cli/internal/pomodoro"
 )
 
 func main() {
-	blockList := []string{
-		"reddit.com",
-		"facebook.com",
-		"linkedin.com",
-	}
-
-	// set a configurable timer for pomodoro
+	// Parse command-line flags
 	timer := flag.Int("timer", 25, "The timer duration in minutes")
 	breakTimer := flag.Int("break", 5, "The break duration in minutes")
-	intervals := flag.Int("interval", 4, "The number of pomodoros to complete before a longer break")
+	intervals := flag.Int("interval", 4, "The number of pomodoros to complete")
 	flag.Parse()
 
-	// create string template to add to the hosts file
-	blockTemplate := blockTemplate(blockList)
-
-	// open the file /etc/hosts
-	hostsFile, err := os.OpenFile("hosts.txt", os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer hostsFile.Close()
-
-	// set cancel context
+	// Setup context for cancellation
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Setup cleanup to always unblock sites when exiting
-	// (in case of cancellation during work phase)
-	defer func() {
-		// Only try to unblock if we're exiting unexpectedly
-		// The unblockSites function handles the case where sites are already unblocked
-		if err := unblockSites(blockTemplate, hostsFile); err != nil {
-			log.Printf("Error during cleanup: %v\n", err)
-		}
-	}()
-
-	// cancel the context when we receive a signal to stop
+	// Setup signal handling for graceful shutdown
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -60,179 +33,24 @@ func main() {
 		cancel()
 	}()
 
-	// Run multiple pomodoro cycles
-	fmt.Printf("🍅 Starting %d Pomodoro cycle(s)\n\n", *intervals)
-
-	for i := 1; i <= *intervals; i++ {
-		fmt.Printf("═══════════════════════════════════════\n")
-		fmt.Printf("🍅 Pomodoro %d of %d\n", i, *intervals)
-		fmt.Printf("═══════════════════════════════════════\n\n")
-
-		// Phase 1: Work time - block sites
-		fmt.Printf("⏰ Work session (%d minutes)\n", *timer)
-		fmt.Println("Blocking distracting sites...")
-		err = blockSites(blockTemplate, hostsFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Play windup sound and start ticking
-		playSound("sounds/windup.wav")
-		workCtx, workCancel := context.WithCancel(ctx)
-		startTickingSound(workCtx)
-
-		// Wait for either the work timer to finish or cancellation
-		select {
-		case <-time.After(time.Duration(*timer) * time.Minute):
-			workCancel() // Stop ticking
-			playSound("ding.wav")
-			fmt.Println("\n✅ Work session complete!")
-		case <-ctx.Done():
-			workCancel() // Stop ticking
-			fmt.Println("\n❌ Pomodoro cancelled")
-			return // defer will unblock sites
-		}
-
-		// Phase 2: Break time - unblock sites
-		fmt.Println("Unblocking sites for break...")
-		err = unblockSites(blockTemplate, hostsFile)
-		if err != nil {
-			log.Printf("Error unblocking sites: %v\n", err)
-			return
-		}
-
-		fmt.Printf("\n☕ Break time! (%d minutes)\n", *breakTimer)
-		fmt.Println("Sites are now unblocked. Take a break!")
-
-		// Play windup sound and start ticking for break
-		playSound("sounds/windup.wav")
-		breakCtx, breakCancel := context.WithCancel(ctx)
-		startTickingSound(breakCtx)
-
-		// Wait for either the break timer to finish or cancellation
-		select {
-		case <-time.After(time.Duration(*breakTimer) * time.Minute):
-			breakCancel() // Stop ticking
-			playSound("sounds/ding.wav")
-			fmt.Println("\n⏰ Break finished!")
-		case <-ctx.Done():
-			breakCancel() // Stop ticking
-			fmt.Println("\n❌ Break cancelled")
-			return
-		}
-
-		fmt.Printf("\n✨ Pomodoro %d complete!\n\n", i)
+	// Configure the Pomodoro session
+	cfg := pomodoro.Config{
+		WorkDuration:  time.Duration(*timer) * time.Minute,
+		BreakDuration: time.Duration(*breakTimer) * time.Minute,
+		Intervals:     *intervals,
+		BlockList: []string{
+			"reddit.com",
+			"facebook.com",
+			"linkedin.com",
+		},
+		HostsFilePath: "hosts.txt",
+		WindupSound:   "sounds/windup.wav",
+		TickingSound:  "sounds/ticking.wav",
+		DingSound:     "sounds/ding.wav",
 	}
 
-	fmt.Println("═══════════════════════════════════════")
-	fmt.Printf("🎉 All %d Pomodoro cycles complete!\n", *intervals)
-	fmt.Println("═══════════════════════════════════════")
-}
-
-// playSound plays a sound file once using afplay (macOS)
-func playSound(soundFile string) {
-	cmd := exec.Command("afplay", soundFile)
-	if err := cmd.Start(); err != nil {
-		log.Printf("Warning: Could not play sound %s: %v\n", soundFile, err)
+	// Run the Pomodoro timer
+	if err := pomodoro.Run(ctx, cfg); err != nil {
+		log.Fatalf("Error running pomodoro: %v\n", err)
 	}
-}
-
-// startTickingSound starts playing the ticking sound in a loop
-// Returns a cancel function to stop the ticking
-func startTickingSound(ctx context.Context) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				cmd := exec.CommandContext(ctx, "afplay", "sounds/ticking.wav")
-				_ = cmd.Run() // Will be interrupted when context is cancelled
-			}
-		}
-	}()
-}
-
-// create a string template to add to the hosts file
-func blockTemplate(blockList []string) string {
-	var blockTemplate strings.Builder
-	blockTemplate.WriteString("\n### Pomodoro CLI - Begin Blocked sites ###\n")
-	for _, block := range blockList {
-		blockTemplate.WriteString(fmt.Sprintf("127.0.0.1 %s\n127.0.0.1 www.%s\n", block, block))
-	}
-	blockTemplate.WriteString("### Pomodoro CLI - End Blocked sites ###\n")
-	return blockTemplate.String()
-}
-
-// block the sites in the hosts file
-func blockSites(blockTemplate string, hostsFile *os.File) error {
-	// Seek to beginning of file to read
-	_, err := hostsFile.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	// read the file
-	hosts, err := io.ReadAll(hostsFile)
-	if err != nil {
-		return err
-	}
-
-	// check if the block template is in the hosts file
-	if strings.Contains(string(hosts), blockTemplate) {
-		fmt.Println("Block template already exists in hosts file")
-		return nil
-	}
-
-	// add the block template to the hosts file
-	_, err = hostsFile.WriteString(blockTemplate)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Block template added to hosts file")
-	return nil
-}
-
-// unblock the sites in the hosts file
-func unblockSites(blockTemplate string, hostsFile *os.File) error {
-	// Seek to beginning of file to read
-	_, err := hostsFile.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	// read the file
-	hosts, err := io.ReadAll(hostsFile)
-	if err != nil {
-		return err
-	}
-
-	// check if the block template is in the hosts file
-	if strings.Contains(string(hosts), blockTemplate) {
-		// Remove the block template
-		newHosts := strings.Replace(string(hosts), blockTemplate, "", -1)
-
-		// Truncate the file and seek to beginning
-		err = hostsFile.Truncate(0)
-		if err != nil {
-			return err
-		}
-		_, err = hostsFile.Seek(0, 0)
-		if err != nil {
-			return err
-		}
-
-		// Write the updated content
-		_, err = hostsFile.WriteString(newHosts)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("Block template removed from hosts file")
-	} else {
-		fmt.Println("Block template not found in hosts file")
-	}
-
-	return nil
 }
