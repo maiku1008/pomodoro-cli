@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/maiku1008/pomodoro-cli/internal/hosts"
@@ -64,12 +65,11 @@ func Run(ctx context.Context, cfg Config) error {
 		sound.StartTicking(workCtx, cfg.TickingSound)
 
 		// Wait for either the work timer to finish or cancellation
-		select {
-		case <-time.After(cfg.WorkDuration):
+		if waitWithCountdown(ctx, cfg.WorkDuration, "🍅") {
 			workCancel() // Stop ticking
 			sound.Play(cfg.DingSound)
 			fmt.Println("\n✅ Work session complete!")
-		case <-ctx.Done():
+		} else {
 			workCancel() // Stop ticking
 			fmt.Println("\n❌ Pomodoro cancelled")
 			return nil
@@ -86,10 +86,9 @@ func Run(ctx context.Context, cfg Config) error {
 		fmt.Println("Sites are now unblocked. Take a break!")
 
 		// Wait for either the break timer to finish or cancellation
-		select {
-		case <-time.After(cfg.BreakDuration):
+		if waitWithCountdown(ctx, cfg.BreakDuration, "☕") {
 			fmt.Println("\n⏰ Break finished!")
-		case <-ctx.Done():
+		} else {
 			fmt.Println("\n❌ Break cancelled")
 			return nil
 		}
@@ -101,4 +100,45 @@ func Run(ctx context.Context, cfg Config) error {
 	fmt.Printf("🎉 All %d Pomodoro cycles complete!\n", cfg.Intervals)
 	fmt.Println("═══════════════════════════════════════")
 	return nil
+}
+
+// waitWithCountdown waits for the specified duration while displaying a countdown with progress bar
+// Returns true if the duration completed, false if context was cancelled
+func waitWithCountdown(ctx context.Context, duration time.Duration, label string) bool {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	endTime := time.Now().Add(duration)
+	totalSeconds := duration.Seconds()
+
+	for {
+		remaining := time.Until(endTime)
+		if remaining <= 0 {
+			fmt.Print("\r" + strings.Repeat(" ", 80) + "\r") // Clear the line
+			return true
+		}
+
+		// Calculate progress
+		elapsed := totalSeconds - remaining.Seconds()
+		progress := elapsed / totalSeconds
+		barWidth := 30
+		filled := int(progress * float64(barWidth))
+
+		// Build progress bar
+		bar := strings.Repeat("█", filled) + strings.Repeat("░", barWidth-filled)
+
+		// Format time as MM:SS
+		minutes := int(remaining.Minutes())
+		seconds := int(remaining.Seconds()) % 60
+
+		fmt.Printf("\r%s [%s] %02d:%02d remaining", label, bar, minutes, seconds)
+
+		select {
+		case <-ctx.Done():
+			fmt.Print("\r" + strings.Repeat(" ", 80) + "\r") // Clear the line
+			return false
+		case <-ticker.C:
+			// Continue loop to update display
+		}
+	}
 }

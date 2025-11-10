@@ -17,7 +17,8 @@ func main() {
 	// Parse command-line flags
 	timer := flag.Int("timer", 25, "The timer duration in minutes")
 	breakTimer := flag.Int("break", 5, "The break duration in minutes")
-	intervals := flag.Int("interval", 4, "The number of pomodoros to complete")
+	intervals := flag.Int("interval", 1, "The number of pomodoros to complete")
+	hostsFile := flag.String("hosts", "/etc/hosts", "The file to modify")
 	flag.Parse()
 
 	// Setup context for cancellation
@@ -42,8 +43,13 @@ func main() {
 			"reddit.com",
 			"facebook.com",
 			"linkedin.com",
+			"bbc.com",
+			"timesofmalta.com",
+			"nintendolife.com",
+			"kotaku.com",
+			"polygon.com",
 		},
-		HostsFilePath: "hosts.txt",
+		HostsFilePath: *hostsFile,
 		WindupSound:   "sounds/windup.wav",
 		TickingSound:  "sounds/ticking.wav",
 		DingSound:     "sounds/ding.wav",

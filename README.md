@@ -1,0 +1,11 @@
+## TODO
+- [x] pass file to modify via cli flag
+- [x] build
+- [x] test with actual /etc/hosts file
+- [ ] Write docs
+- [ ] Print the hosts file being used
+- [ ] Create git repo
+- [ ] Pass the sites via a text file, or a list of strings?
+- [ ] can we bake the sound files in the binary?
+- [ ] option to be silent
+- [x] Show time left in the timer
