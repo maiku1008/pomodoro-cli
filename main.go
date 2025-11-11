@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -19,7 +20,8 @@ func main() {
 	breakTimer := flag.Int("break", 5, "The break duration in minutes")
 	intervals := flag.Int("interval", 1, "The number of pomodoros to complete")
 	hostsFile := flag.String("hosts", "/etc/hosts", "The file to modify")
-	silent := flag.Bool("silent", false, "Enable the ticking sound")
+	silent := flag.Bool("silent", false, "Disable the ticking sound")
+	blockList := flag.String("blocklist", "", "The list of sites to block, separated by commas.")
 	flag.Parse()
 
 	// Setup context for cancellation
@@ -35,21 +37,16 @@ func main() {
 		cancel()
 	}()
 
+	var splitBlockList []string
+	if *blockList != "" {
+		splitBlockList = strings.Split(*blockList, ",")
+	}
 	// Configure the Pomodoro session
 	cfg := pomodoro.Config{
 		WorkDuration:  time.Duration(*timer) * time.Minute,
 		BreakDuration: time.Duration(*breakTimer) * time.Minute,
 		Intervals:     *intervals,
-		BlockList: []string{
-			"reddit.com",
-			"facebook.com",
-			"linkedin.com",
-			"bbc.com",
-			"timesofmalta.com",
-			"nintendolife.com",
-			"kotaku.com",
-			"polygon.com",
-		},
+		BlockList:     splitBlockList,
 		HostsFilePath: *hostsFile,
 		Silent:        *silent,
 	}

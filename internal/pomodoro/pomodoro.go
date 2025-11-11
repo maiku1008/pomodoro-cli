@@ -24,23 +24,34 @@ type Config struct {
 
 // Run executes the Pomodoro timer with the given configuration
 func Run(ctx context.Context, cfg Config) error {
-	// create string template to add to the hosts file
-	blockTemplate := hosts.BlockTemplate(cfg.BlockList)
+	// Only setup hosts blocking if there are sites to block
+	var blockTemplate string
+	var hostsFile *os.File
+	var err error
 
-	// open the hosts file
-	hostsFile, err := os.OpenFile(cfg.HostsFilePath, os.O_RDWR, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to open hosts file: %w", err)
-	}
-	defer hostsFile.Close()
+	hasBlockList := len(cfg.BlockList) > 0 && cfg.BlockList[0] != ""
 
-	// Setup cleanup to always unblock sites and clean up temp files when exiting
-	defer func() {
-		sound.Cleanup()
-		if err := hosts.Unblock(blockTemplate, hostsFile); err != nil {
-			log.Printf("Error during cleanup: %v\n", err)
+	if hasBlockList {
+		// create string template to add to the hosts file
+		blockTemplate = hosts.BlockTemplate(cfg.BlockList)
+
+		// open the hosts file
+		hostsFile, err = os.OpenFile(cfg.HostsFilePath, os.O_RDWR, 0644)
+		if err != nil {
+			return fmt.Errorf("failed to open hosts file: %w", err)
 		}
-	}()
+		defer hostsFile.Close()
+
+		// Setup cleanup to always unblock sites when exiting
+		defer func() {
+			if err := hosts.Unblock(blockTemplate, hostsFile); err != nil {
+				log.Printf("Error during cleanup: %v\n", err)
+			}
+		}()
+	}
+
+	// Setup cleanup for sound (always needed)
+	defer sound.Cleanup()
 
 	// Run multiple pomodoro cycles
 	fmt.Printf("🍅 Starting %d Pomodoro cycle(s)\n\n", cfg.Intervals)
@@ -52,10 +63,13 @@ func Run(ctx context.Context, cfg Config) error {
 
 		// Phase 1: Work time - block sites
 		fmt.Printf("⏰ Work session (%.0f minutes)\n", cfg.WorkDuration.Minutes())
-		fmt.Println("Blocking distracting sites...")
-		err = hosts.Block(blockTemplate, hostsFile)
-		if err != nil {
-			return fmt.Errorf("failed to block sites: %w", err)
+
+		if hasBlockList {
+			fmt.Println("Blocking distracting sites...")
+			err = hosts.Block(blockTemplate, hostsFile)
+			if err != nil {
+				return fmt.Errorf("failed to block sites: %w", err)
+			}
 		}
 
 		// Play windup sound and start ticking
@@ -77,14 +91,18 @@ func Run(ctx context.Context, cfg Config) error {
 		}
 
 		// Phase 2: Break time - unblock sites
-		fmt.Println("Unblocking sites for break...")
-		err = hosts.Unblock(blockTemplate, hostsFile)
-		if err != nil {
-			return fmt.Errorf("failed to unblock sites: %w", err)
+		if hasBlockList {
+			fmt.Println("Unblocking sites for break...")
+			err = hosts.Unblock(blockTemplate, hostsFile)
+			if err != nil {
+				return fmt.Errorf("failed to unblock sites: %w", err)
+			}
 		}
 
 		fmt.Printf("\n☕ Break time! (%.0f minutes)\n", cfg.BreakDuration.Minutes())
-		fmt.Println("Sites are now unblocked. Take a break!")
+		if hasBlockList {
+			fmt.Println("Sites are now unblocked. Take a break!")
+		}
 
 		// Wait for either the break timer to finish or cancellation
 		if waitWithCountdown(ctx, cfg.BreakDuration, "☕") {

@@ -4,7 +4,7 @@
 - [x] test with actual /etc/hosts file
 - [ ] Write docs
 - [ ] Create git repo
-- [ ] Pass the sites via a text file, or a list of strings?
+- [x] Pass the sites as an environment variable as a list of strings
     - [ ] Print the hosts file being used
 - [x] can we bake the sound files in the binary?
 - [x] option to be silent
