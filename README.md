@@ -28,7 +28,7 @@ The [Pomodoro Technique](https://en.wikipedia.org/wiki/Pomodoro_Technique) is a 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/pomodoro-cli.git
+git clone https://github.com/maiku1008/pomodoro-cli.git
 cd pomodoro-cli
 
 # Build the binary
@@ -41,7 +41,7 @@ sudo mv pomodoro /usr/local/bin/
 ### Option 2: Direct go install
 
 ```bash
-go install github.com/yourusername/pomodoro-cli@latest
+go install github.com/maiku1008/pomodoro-cli@latest
 ```
 
 ## 📖 Usage
