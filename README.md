@@ -6,6 +6,6 @@
 - [ ] Create git repo
 - [ ] Pass the sites via a text file, or a list of strings?
     - [ ] Print the hosts file being used
-- [ ] can we bake the sound files in the binary?
+- [x] can we bake the sound files in the binary?
 - [x] option to be silent
 - [x] Show time left in the timer

@@ -19,9 +19,6 @@ type Config struct {
 	Intervals     int
 	BlockList     []string
 	HostsFilePath string
-	WindupSound   string
-	TickingSound  string
-	DingSound     string
 	Silent        bool
 }
 
@@ -37,12 +34,12 @@ func Run(ctx context.Context, cfg Config) error {
 	}
 	defer hostsFile.Close()
 
-	// Setup cleanup to always unblock sites when exiting
+	// Setup cleanup to always unblock sites and clean up temp files when exiting
 	defer func() {
+		sound.Cleanup()
 		if err := hosts.Unblock(blockTemplate, hostsFile); err != nil {
 			log.Printf("Error during cleanup: %v\n", err)
 		}
-		fmt.Println("Distracting sites unblocked")
 	}()
 
 	// Run multiple pomodoro cycles
@@ -62,16 +59,16 @@ func Run(ctx context.Context, cfg Config) error {
 		}
 
 		// Play windup sound and start ticking
-		sound.Play(cfg.WindupSound)
+		sound.PlaySound(sound.Windup)
 		workCtx, workCancel := context.WithCancel(ctx)
 		if !cfg.Silent {
-			sound.StartTickingSound(workCtx, cfg.TickingSound)
+			sound.StartTickingSound(workCtx)
 		}
 
 		// Wait for either the work timer to finish or cancellation
 		if waitWithCountdown(ctx, cfg.WorkDuration, "🍅") {
 			workCancel() // Stop ticking
-			sound.Play(cfg.DingSound)
+			sound.PlaySound(sound.Ding)
 			fmt.Println("\n✅ Work session complete!")
 		} else {
 			workCancel() // Stop ticking

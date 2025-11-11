@@ -51,9 +51,6 @@ func main() {
 			"polygon.com",
 		},
 		HostsFilePath: *hostsFile,
-		WindupSound:   "sounds/windup.wav",
-		TickingSound:  "sounds/ticking.wav",
-		DingSound:     "sounds/ding.wav",
 		Silent:        *silent,
 	}
 
