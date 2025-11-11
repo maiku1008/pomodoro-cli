@@ -17,10 +17,10 @@ func Play(soundFile string) {
 	}
 }
 
-// StartTicking starts playing the ticking sound in a continuous loop
+// StartTickingSound starts playing the ticking sound in a continuous loop
 // The ticking will stop when the context is cancelled
 // To avoid gaps between loops, we start the next play slightly before the current one finishes
-func StartTicking(ctx context.Context, soundFile string) {
+func StartTickingSound(ctx context.Context, soundFile string) {
 	go func() {
 		// Get the duration of the sound file
 		duration, err := getSoundDuration(soundFile)

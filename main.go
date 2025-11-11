@@ -19,6 +19,7 @@ func main() {
 	breakTimer := flag.Int("break", 5, "The break duration in minutes")
 	intervals := flag.Int("interval", 1, "The number of pomodoros to complete")
 	hostsFile := flag.String("hosts", "/etc/hosts", "The file to modify")
+	silent := flag.Bool("silent", false, "Enable the ticking sound")
 	flag.Parse()
 
 	// Setup context for cancellation
@@ -53,6 +54,7 @@ func main() {
 		WindupSound:   "sounds/windup.wav",
 		TickingSound:  "sounds/ticking.wav",
 		DingSound:     "sounds/ding.wav",
+		Silent:        *silent,
 	}
 
 	// Run the Pomodoro timer

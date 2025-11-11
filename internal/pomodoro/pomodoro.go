@@ -22,6 +22,7 @@ type Config struct {
 	WindupSound   string
 	TickingSound  string
 	DingSound     string
+	Silent        bool
 }
 
 // Run executes the Pomodoro timer with the given configuration
@@ -41,6 +42,7 @@ func Run(ctx context.Context, cfg Config) error {
 		if err := hosts.Unblock(blockTemplate, hostsFile); err != nil {
 			log.Printf("Error during cleanup: %v\n", err)
 		}
+		fmt.Println("Distracting sites unblocked")
 	}()
 
 	// Run multiple pomodoro cycles
@@ -62,7 +64,9 @@ func Run(ctx context.Context, cfg Config) error {
 		// Play windup sound and start ticking
 		sound.Play(cfg.WindupSound)
 		workCtx, workCancel := context.WithCancel(ctx)
-		sound.StartTicking(workCtx, cfg.TickingSound)
+		if !cfg.Silent {
+			sound.StartTickingSound(workCtx, cfg.TickingSound)
+		}
 
 		// Wait for either the work timer to finish or cancellation
 		if waitWithCountdown(ctx, cfg.WorkDuration, "🍅") {
