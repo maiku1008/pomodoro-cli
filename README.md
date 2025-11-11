@@ -24,7 +24,15 @@ The [Pomodoro Technique](https://en.wikipedia.org/wiki/Pomodoro_Technique) is a 
 
 ## 🚀 Installation
 
-### Option 1: Build from source
+### Recommended: Direct go install
+
+```bash
+go install github.com/maiku1008/pomodoro-cli@latest
+```
+
+This will install the `pomodoro-cli` binary to your `$GOPATH/bin` directory (usually `~/go/bin`). Make sure this directory is in your PATH.
+
+### Alternative: Build from source
 
 ```bash
 # Clone the repository
@@ -32,16 +40,10 @@ git clone https://github.com/maiku1008/pomodoro-cli.git
 cd pomodoro-cli
 
 # Build the binary
-go build -o pomodoro
+go build -o pomodoro-cli
 
 # Move to your PATH (optional)
-sudo mv pomodoro /usr/local/bin/
-```
-
-### Option 2: Direct go install
-
-```bash
-go install github.com/maiku1008/pomodoro-cli@latest
+sudo mv pomodoro-cli /usr/local/bin/
 ```
 
 ## 📖 Usage
@@ -50,54 +52,54 @@ go install github.com/maiku1008/pomodoro-cli@latest
 
 **Standard 25-minute Pomodoro with 5-minute break:**
 ```bash
-./pomodoro
+pomodoro-cli
 ```
 
 **Custom timing - 45 minutes work, 10 minutes break:**
 ```bash
-./pomodoro -timer 45 -break 10
+pomodoro-cli -timer 45 -break 10
 ```
 
 **Run 4 Pomodoro cycles in a row:**
 ```bash
-./pomodoro -interval 4
+pomodoro-cli -interval 4
 ```
 
 **Silent mode (no ticking sound):**
 ```bash
-./pomodoro -silent
+pomodoro-cli -silent
 ```
 
 **Block distracting websites during work:**
 ```bash
-sudo ./pomodoro -blocklist "twitter.com,reddit.com,youtube.com"
+sudo pomodoro-cli -blocklist "twitter.com,reddit.com,youtube.com"
 ```
 
 **Full-featured session:**
 ```bash
-sudo ./pomodoro -timer 25 -break 5 -interval 4 -blocklist "twitter.com,facebook.com,reddit.com"
+sudo pomodoro-cli -timer 25 -break 5 -interval 4 -blocklist "twitter.com,facebook.com,reddit.com"
 ```
 
 ### 🎮 Real-World Examples
 
 **Deep work session (2 hours of focused work):**
 ```bash
-sudo ./pomodoro -timer 50 -break 10 -interval 2 -blocklist "twitter.com,reddit.com,news.ycombinator.com"
+sudo pomodoro-cli -timer 50 -break 10 -interval 2 -blocklist "twitter.com,reddit.com,news.ycombinator.com"
 ```
 
 **Quick task sprint (15 minutes):**
 ```bash
-./pomodoro -timer 15 -break 3
+pomodoro-cli -timer 15 -break 3
 ```
 
 **Study session with social media blocked:**
 ```bash
-sudo ./pomodoro -timer 25 -break 5 -interval 4 -blocklist "instagram.com,tiktok.com,twitter.com,facebook.com"
+sudo pomodoro-cli -timer 25 -break 5 -interval 4 -blocklist "instagram.com,tiktok.com,twitter.com,facebook.com"
 ```
 
 **Late night coding (silent mode):**
 ```bash
-./pomodoro -timer 30 -break 5 -silent -blocklist "youtube.com,reddit.com"
+sudo pomodoro-cli -timer 30 -break 5 -silent -blocklist "youtube.com,reddit.com"
 ```
 
 ## ⚙️ Configuration Options
@@ -164,7 +166,7 @@ All sounds are embedded in the binary, so no external files are needed!
 
 **Solution:** Run the command with `sudo`:
 ```bash
-sudo ./pomodoro -blocklist "twitter.com,reddit.com"
+sudo pomodoro-cli -blocklist "twitter.com,reddit.com"
 ```
 
 ### Sites aren't being blocked
