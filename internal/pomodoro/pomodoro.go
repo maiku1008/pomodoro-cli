@@ -61,6 +61,9 @@ func Run(ctx context.Context, cfg Config) error {
 		fmt.Printf("🍅 Pomodoro %d of %d\n", i, cfg.Intervals)
 		fmt.Printf("═══════════════════════════════════════\n\n")
 
+		// Play windup sound
+		sound.PlaySound(sound.Windup)
+
 		// Phase 1: Work time - block sites
 		fmt.Printf("⏰ Work session (%.0f minutes)\n", cfg.WorkDuration.Minutes())
 
@@ -72,10 +75,9 @@ func Run(ctx context.Context, cfg Config) error {
 			}
 		}
 
-		// Play windup sound and start ticking
-		sound.PlaySound(sound.Windup)
 		workCtx, workCancel := context.WithCancel(ctx)
 		if !cfg.Silent {
+			// Start ticking sound
 			sound.StartTickingSound(workCtx)
 		}
 
@@ -99,13 +101,19 @@ func Run(ctx context.Context, cfg Config) error {
 			}
 		}
 
-		fmt.Printf("\n☕ Break time! (%.0f minutes)\n", cfg.BreakDuration.Minutes())
+		breakDuration := cfg.BreakDuration
+		if i == cfg.Intervals {
+			breakDuration = cfg.BreakDuration * 3 // 3x the break duration for the last pomodoro
+			fmt.Println("\n☕ Interval completed, taking a longer break!")
+		}
+
+		fmt.Printf("\n☕ Break time! (%.0f minutes)\n", breakDuration.Minutes())
 		if hasBlockList {
 			fmt.Println("Sites are now unblocked. Take a break!")
 		}
 
 		// Wait for either the break timer to finish or cancellation
-		if waitWithCountdown(ctx, cfg.BreakDuration, "☕") {
+		if waitWithCountdown(ctx, breakDuration, "☕") {
 			fmt.Println("\n⏰ Break finished!")
 		} else {
 			fmt.Println("\n❌ Break cancelled")
