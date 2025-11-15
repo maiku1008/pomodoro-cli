@@ -6,6 +6,7 @@ A command-line Pomodoro timer to help you stay focused and productive. Work in f
 
 - ⏰ **Customizable work and break intervals** - Set your own timing
 - 🔄 **Multiple Pomodoro cycles** - Run several rounds automatically
+- 🎁 **Extended break after completion** - Get a 3x longer break after finishing all cycles (e.g., 15-minute break if your standard break is 5 minutes)
 - 🚫 **Website blocking** - Block distracting sites during work time (automatically unblocks during breaks)
 - 🔊 **Audio feedback** - Windup sound at start, ticking during work, and ding when complete
 - 🤫 **Silent mode** - Disable ticking sound if you prefer quiet focus
@@ -19,7 +20,7 @@ The [Pomodoro Technique](https://en.wikipedia.org/wiki/Pomodoro_Technique) is a 
 ## 📋 Requirements
 
 - **macOS** (this tool is designed for macOS only)
-- **Go 1.16+** (for building from source)
+- **Go 1.24+** (for building from source)
 - **sudo privileges** (only needed if using the website blocking feature)
 
 ## 🚀 Installation
@@ -158,6 +159,7 @@ All sounds are embedded in the binary, so no external files are needed!
 4. **Experiment with timing:** Some tasks need longer focus periods (50 min), others benefit from shorter sprints (15 min)
 5. **Silent mode for shared spaces:** Use `-silent` when working in libraries or offices
 6. **Chain multiple cycles:** Use `-interval 4` for a full work session without having to restart
+7. **Enjoy your extended break:** After completing all cycles, you'll get a 3x longer break - perfect for a walk, meal, or longer rest
 
 ## 🛠️ Troubleshooting
 
@@ -221,7 +223,25 @@ Sites are now unblocked. Take a break!
 ═══════════════════════════════════════
 🍅 Pomodoro 2 of 2
 ═══════════════════════════════════════
-...
+
+⏰ Work session (25 minutes)
+🍅 [████████████████████████████████] 00:00 remaining
+
+✅ Work session complete!
+
+☕ Interval completed, taking a longer break!
+
+☕ Break time! (15 minutes)
+Sites are now unblocked. Take a break!
+☕ [████████████████████████████████] 00:00 remaining
+
+⏰ Break finished!
+
+✨ Pomodoro 2 complete!
+
+═══════════════════════════════════════
+🎉 All 2 Pomodoro cycles complete!
+═══════════════════════════════════════
 ```
 
 ## 🤝 Contributing
