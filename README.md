@@ -6,7 +6,7 @@ A command-line Pomodoro timer to help you stay focused and productive. Work in f
 
 - ⏰ **Customizable work and break intervals** - Set your own timing
 - 🔄 **Multiple Pomodoro cycles** - Run several rounds automatically
-- 🎁 **Extended break after completion** - Get a 3x longer break after finishing all cycles (e.g., 15-minute break if your standard break is 5 minutes)
+- 🎁 **Extended break after completion** - Get a 3x longer break after finishing all cycles when running multiple intervals (e.g., 15-minute break if your standard break is 5 minutes, only applies with `-interval 2` or higher)
 - 🚫 **Website blocking** - Block distracting sites during work time (automatically unblocks during breaks)
 - 🔊 **Audio feedback** - Windup sound at start, ticking during work, and ding when complete
 - 🤫 **Silent mode** - Disable ticking sound if you prefer quiet focus
@@ -159,7 +159,7 @@ All sounds are embedded in the binary, so no external files are needed!
 4. **Experiment with timing:** Some tasks need longer focus periods (50 min), others benefit from shorter sprints (15 min)
 5. **Silent mode for shared spaces:** Use `-silent` when working in libraries or offices
 6. **Chain multiple cycles:** Use `-interval 4` for a full work session without having to restart
-7. **Enjoy your extended break:** After completing all cycles, you'll get a 3x longer break - perfect for a walk, meal, or longer rest
+7. **Enjoy your extended break:** When running multiple intervals (`-interval 2` or higher), you'll get a 3x longer break after completing all cycles - perfect for a walk, meal, or longer rest
 
 ## 🛠️ Troubleshooting
 

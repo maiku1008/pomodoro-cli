@@ -102,8 +102,9 @@ func Run(ctx context.Context, cfg Config) error {
 		}
 
 		breakDuration := cfg.BreakDuration
-		if i == cfg.Intervals {
-			breakDuration = cfg.BreakDuration * 3 // 3x the break duration for the last pomodoro
+		// 3x the break duration for the last pomodoro, but only if there are multiple intervals
+		if cfg.Intervals > 1 && i == cfg.Intervals {
+			breakDuration = cfg.BreakDuration * 3
 			fmt.Println("\n☕ Interval completed, taking a longer break!")
 		}
 
