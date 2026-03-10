@@ -18,7 +18,7 @@ go run main.go -timer 25 -break 5 -interval 4 -silent -notick
 go install github.com/maiku1008/pomodoro-cli@latest
 ```
 
-No tests exist in this codebase yet. No linter is configured.
+Run tests with `go test ./...`. No linter is configured.
 
 ## Architecture
 
