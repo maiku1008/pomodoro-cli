@@ -9,7 +9,7 @@ A command-line Pomodoro timer to help you stay focused and productive. Work in f
 - 🎁 **Extended break after completion** - Get a 3x longer break after finishing all cycles when running multiple intervals (e.g., 15-minute break if your standard break is 5 minutes, only applies with `-interval 2` or higher)
 - 🚫 **Website blocking** - Block distracting sites during work time (automatically unblocks during breaks)
 - 🔊 **Audio feedback** - Windup sound at start, ticking during work, and ding when complete
-- 🤫 **Silent mode** - Disable ticking sound if you prefer quiet focus
+- 🤫 **Silent mode** - Disable all sounds, or just the ticking with `--notick`
 - 📊 **Visual progress bar** - countdown bar with progress indicator
 - ⌨️ **Graceful interruption** - Cancel anytime with Ctrl+C and sites will be automatically unblocked
 
@@ -66,9 +66,14 @@ pomodoro-cli -timer 45 -break 10
 pomodoro-cli -interval 4
 ```
 
-**Silent mode (no ticking sound):**
+**Silent mode (no sounds at all):**
 ```bash
 pomodoro-cli -silent
+```
+
+**No ticking sound only:**
+```bash
+pomodoro-cli -notick
 ```
 
 **Block distracting websites during work:**
@@ -112,7 +117,8 @@ sudo pomodoro-cli -timer 30 -break 5 -silent -blocklist "youtube.com,reddit.com"
 | `-interval` | `1` | Number of Pomodoro cycles to complete |
 | `-blocklist` | `""` | Comma-separated list of websites to block during work (e.g., "twitter.com,reddit.com") |
 | `-hosts` | `/etc/hosts` | Path to hosts file (only change if you know what you're doing) |
-| `-silent` | `false` | Disable the ticking sound during work sessions |
+| `-silent` | `false` | Disable all sounds |
+| `-notick` | `false` | Disable the ticking sound only |
 
 ## 🔒 Website Blocking
 
@@ -146,7 +152,7 @@ When you block `example.com`, both of these are blocked:
 
 The app includes three embedded sounds (macOS only, uses `afplay`):
 - **Windup** 🎬 - Plays at the start of each work session
-- **Ticking** ⏱️ - Gentle ticking during work (can be disabled with `-silent`)
+- **Ticking** ⏱️ - Gentle ticking during work (can be disabled with `-notick` or `-silent`)
 - **Ding** 🔔 - Notification when a session completes
 
 All sounds are embedded in the binary, so no external files are needed!
@@ -157,7 +163,7 @@ All sounds are embedded in the binary, so no external files are needed!
 2. **Use website blocking wisely:** Block your biggest time-wasters during deep work
 3. **Take your breaks seriously:** Step away from your computer, stretch, hydrate
 4. **Experiment with timing:** Some tasks need longer focus periods (50 min), others benefit from shorter sprints (15 min)
-5. **Silent mode for shared spaces:** Use `-silent` when working in libraries or offices
+5. **Silent mode for shared spaces:** Use `-notick` to mute only the ticking, or `-silent` to mute all sounds
 6. **Chain multiple cycles:** Use `-interval 4` for a full work session without having to restart
 7. **Enjoy your extended break:** When running multiple intervals (`-interval 2` or higher), you'll get a 3x longer break after completing all cycles - perfect for a walk, meal, or longer rest
 
