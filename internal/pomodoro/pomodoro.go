@@ -20,6 +20,7 @@ type Config struct {
 	BlockList     []string
 	HostsFilePath string
 	Silent        bool
+	NoTick        bool
 }
 
 // Run executes the Pomodoro timer with the given configuration
@@ -62,7 +63,9 @@ func Run(ctx context.Context, cfg Config) error {
 		fmt.Printf("═══════════════════════════════════════\n\n")
 
 		// Play windup sound
-		sound.PlaySound(sound.Windup)
+		if !cfg.Silent {
+			sound.PlaySound(sound.Windup)
+		}
 
 		// Phase 1: Work time - block sites
 		fmt.Printf("⏰ Work session (%.0f minutes)\n", cfg.WorkDuration.Minutes())
@@ -76,15 +79,16 @@ func Run(ctx context.Context, cfg Config) error {
 		}
 
 		workCtx, workCancel := context.WithCancel(ctx)
-		if !cfg.Silent {
-			// Start ticking sound
+		if !cfg.Silent && !cfg.NoTick {
 			sound.StartTickingSound(workCtx)
 		}
 
 		// Wait for either the work timer to finish or cancellation
 		if waitWithCountdown(ctx, cfg.WorkDuration, "🍅") {
 			workCancel() // Stop ticking
-			sound.PlaySound(sound.Ding)
+			if !cfg.Silent {
+				sound.PlaySound(sound.Ding)
+			}
 			fmt.Println("\n✅ Work session complete!")
 		} else {
 			workCancel() // Stop ticking

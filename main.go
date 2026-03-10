@@ -20,7 +20,8 @@ func main() {
 	breakTimer := flag.Int("break", 5, "The break duration in minutes")
 	intervals := flag.Int("interval", 1, "The number of pomodoros to complete")
 	hostsFile := flag.String("hosts", "/etc/hosts", "The file to modify")
-	silent := flag.Bool("silent", false, "Disable the ticking sound")
+	silent := flag.Bool("silent", false, "Disable all sounds")
+	noTick := flag.Bool("notick", false, "Disable the ticking sound")
 	blockList := flag.String("blocklist", "", "The list of sites to block, separated by commas.")
 	flag.Parse()
 
@@ -49,6 +50,7 @@ func main() {
 		BlockList:     splitBlockList,
 		HostsFilePath: *hostsFile,
 		Silent:        *silent,
+		NoTick:        *noTick,
 	}
 
 	// Run the Pomodoro timer
